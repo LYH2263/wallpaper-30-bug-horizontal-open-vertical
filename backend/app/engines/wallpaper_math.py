@@ -1,7 +1,4 @@
-"""Wallpaper rolls: strips by paste orientation, pattern repeat on drop length, strips per roll.
-
-Open-path consumers may rebuild vertical geometry independently of the stored orientation flag.
-"""
+"""Wallpaper rolls: strips by paste orientation, pattern repeat on drop length, strips per roll."""
 
 from app.engines.helpers import ceil_units, floor_units
 

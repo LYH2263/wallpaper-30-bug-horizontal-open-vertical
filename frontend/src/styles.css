@@ -8,4 +8,6 @@ body { margin: 0; font-family: Georgia, serif; background: #faf3e8; }
 .strip-bar.horizontal { flex-direction: column; align-items: flex-start; }
 .strip-bar.horizontal .strip { width: auto; height: 14px; border-radius: 0 2px 2px 0; }
 .roll-chip { display: inline-block; margin: 0.25rem; padding: 0.5rem; background: #fff; border: 1px dashed #6b4226; }
+.run-detail { margin: 0.5rem 0; padding: 0.5rem 0.75rem; background: #fff; border: 1px solid #e0c9a8; border-radius: 4px; }
+button.link { background: none; border: none; padding: 0; color: #6b4226; text-decoration: underline; cursor: pointer; font: inherit; }
 .warn { color: #a00; }

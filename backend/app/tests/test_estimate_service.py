@@ -38,15 +38,29 @@ def test_invalid_roll_size_rejected_and_no_row_added(fresh_db):
 def test_saved_run_pins_orientation_and_rolls(fresh_db):
     out = estimate_service.run_estimate(1, 1, True, "", orientation="horizontal")
     assert out["run_id"]
-    run = [r for r in history.list_runs() if r["id"] == out["run_id"]][0]
-    assert run["result"]["orientation"] == "horizontal"
-    assert run["result"]["rolls"] == 6
+    pinned = {k: out[k] for k in ("orientation", "drops", "drop_len_m", "pattern_m", "strips_per_roll", "rolls")}
 
-    # 只改系统默认贴向,不得改写旧 run
+    # 同参竖贴结果确实不同,证明读回的是横贴那一版而非竖贴口径。
+    vert = estimate_service.run_estimate(1, 1, False, "", orientation="vertical")
+    assert {k: vert[k] for k in pinned} != pinned
+
+    def _snapshot(run):
+        return {k: run["result"][k] for k in pinned}
+
+    run = history.get_run(out["run_id"])
+    assert _snapshot(run) == pinned
+    listed = [r for r in history.list_runs() if r["id"] == out["run_id"]][0]
+    assert _snapshot(listed) == pinned
+
+    # 只改系统默认贴向,不得改写旧 run:详情与列表都必须停在写入时的横贴版本。
     settings_repo.set_all({"default_orientation": "vertical"})
+    assert _snapshot(history.get_run(out["run_id"])) == pinned
     run_after = [r for r in history.list_runs() if r["id"] == out["run_id"]][0]
-    assert run_after["result"]["orientation"] == "horizontal"
-    assert run_after["result"]["rolls"] == 6
+    assert _snapshot(run_after) == pinned
+
+
+def test_get_missing_run_returns_none(fresh_db):
+    assert history.get_run(9999) is None
 
 
 def test_default_orientation_comes_from_settings(fresh_db):

@@ -45,6 +45,13 @@ def test_invalid_roll_size_rejected_both_orientations():
         roll_count(16.0, 2.7, 0.53, 0.0, 0, orientation="horizontal")
 
 
+def test_negative_width_rejected_both_orientations():
+    with pytest.raises(ValueError):
+        roll_count(16.0, 2.7, -0.53, 10.0, 0)
+    with pytest.raises(ValueError):
+        roll_count(16.0, 2.7, -0.53, 10.0, 0, orientation="horizontal")
+
+
 def test_invalid_orientation_rejected():
     with pytest.raises(ValueError):
         roll_count(16.0, 2.7, 0.53, 10.0, 0, orientation="diagonal")

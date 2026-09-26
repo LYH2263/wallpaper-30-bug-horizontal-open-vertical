@@ -17,16 +17,38 @@ def insert_run(wall_id: int, roll_id: int, result: dict, note: str = "") -> int:
         conn.close()
 
 
-def list_runs(limit: int = 50):
-    from app.services.horizontal_open import open_as_vertical
+def _row_to_run(row) -> dict:
+    d = dict(row)
+    # result_json 是当次试算钉住的快照:贴向标记、幅数、条长、卷数一律原样读回,
+    # 禁止在读路径上按其它贴向公式重算,也不随系统默认贴向重跑。
+    d["result"] = json.loads(d.pop("result_json"))
+    return d
 
+
+def get_run(run_id: int):
+    conn = connect()
+    try:
+        row = conn.execute(
+            """
+            SELECT r.*, w.name wall_name, rl.name roll_name
+            FROM calc_runs r
+            LEFT JOIN walls w ON w.id=r.wall_id
+            LEFT JOIN rolls rl ON rl.id=r.roll_id
+            WHERE r.id=?
+            """,
+            (run_id,),
+        ).fetchone()
+        return _row_to_run(row) if row else None
+    finally:
+        conn.close()
+
+
+def list_runs(limit: int = 50):
     conn = connect()
     try:
         rows = conn.execute(
             """
-            SELECT r.*, w.name wall_name, rl.name roll_name,
-                   w.perimeter wall_perimeter, w.height wall_height,
-                   rl.width roll_width, rl.length roll_length, rl.pattern_cm roll_pattern_cm
+            SELECT r.*, w.name wall_name, rl.name roll_name
             FROM calc_runs r
             LEFT JOIN walls w ON w.id=r.wall_id
             LEFT JOIN rolls rl ON rl.id=r.roll_id
@@ -34,19 +56,6 @@ def list_runs(limit: int = 50):
             """,
             (limit,),
         ).fetchall()
-        out = []
-        for row in rows:
-            d = dict(row)
-            dims = {
-                "perimeter": d.get("wall_perimeter"),
-                "height": d.get("wall_height"),
-                "roll_width": d.get("roll_width"),
-                "roll_length": d.get("roll_length"),
-                "pattern_cm": d.get("roll_pattern_cm"),
-            }
-            raw = json.loads(d.pop("result_json"))
-            d["result"] = open_as_vertical(raw, dims)
-            out.append(d)
-        return out
+        return [_row_to_run(row) for row in rows]
     finally:
         conn.close()
