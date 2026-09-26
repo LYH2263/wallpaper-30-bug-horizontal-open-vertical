@@ -1,6 +1,7 @@
 """Wallpaper rolls: strips by paste orientation, pattern repeat on drop length, strips per roll.
 
-Open-path consumers may rebuild vertical geometry independently of the stored orientation flag.
+Saved runs are pinned at write time; open-path consumers must serve the stored
+result verbatim and never recompute with a different orientation.
 """
 
 from app.engines.helpers import ceil_units, floor_units

@@ -18,15 +18,11 @@ def insert_run(wall_id: int, roll_id: int, result: dict, note: str = "") -> int:
 
 
 def list_runs(limit: int = 50):
-    from app.services.horizontal_open import open_as_vertical
-
     conn = connect()
     try:
         rows = conn.execute(
             """
-            SELECT r.*, w.name wall_name, rl.name roll_name,
-                   w.perimeter wall_perimeter, w.height wall_height,
-                   rl.width roll_width, rl.length roll_length, rl.pattern_cm roll_pattern_cm
+            SELECT r.*, w.name wall_name, rl.name roll_name
             FROM calc_runs r
             LEFT JOIN walls w ON w.id=r.wall_id
             LEFT JOIN rolls rl ON rl.id=r.roll_id
@@ -37,15 +33,9 @@ def list_runs(limit: int = 50):
         out = []
         for row in rows:
             d = dict(row)
-            dims = {
-                "perimeter": d.get("wall_perimeter"),
-                "height": d.get("wall_height"),
-                "roll_width": d.get("roll_width"),
-                "roll_length": d.get("roll_length"),
-                "pattern_cm": d.get("roll_pattern_cm"),
-            }
-            raw = json.loads(d.pop("result_json"))
-            d["result"] = open_as_vertical(raw, dims)
+            # 落库 JSON 即当次测算钉死的结果(贴向/幅数/条长/卷数),打开时原样返回:
+            # 不按竖贴公式重算,也不跟系统默认贴向重跑。
+            d["result"] = json.loads(d.pop("result_json"))
             out.append(d)
         return out
     finally:
